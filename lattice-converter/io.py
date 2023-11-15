@@ -4,7 +4,7 @@ import json
 # from urllib.parse import urlparse
 # from urllib.request import urlopen
 
-# from . import convert
+from . import convert
 # from .format import format_json
 # from .validate import validate as _validate
 
@@ -36,8 +36,8 @@ def load_string(string: str, input_format: str, validate: bool = True) -> dict:
     """
     if input_format == "json":
         latticejson = json.loads(string)
-    # elif input_format == "madx":
-    #     latticejson = convert.from_madx(string)        
+    elif input_format == "madx":
+        latticejson = convert.from_madx(string)        
     # elif input_format == "lte":
     #     latticejson = convert.from_elegant(string)
     # elif input_format == "madx":

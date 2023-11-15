@@ -1,0 +1,23 @@
+{
+    "description": "LatticeJSON, elegant, MADX",
+    "map": [
+        ["Drift", ["drif", "drift", "edrift"], ["drift"]],
+        ["Dipole", ["csbend", "sbend", "bend"], ["sbend", "rbend"]],
+        ["Quadrupole", ["kquad", "quad", "quadrupole"], ["quadrupole"]],
+        ["Sextupole", ["ksext", "sext", "sextupole"], ["sextupole"]],
+        ["Octupole", ["koct", "octu"], ["octupole"]],
+        ["Cavity", ["rfca"], ["rfcavity"]],
+        ["Lattice", ["line"], ["line"]],
+        ["Marker", ["mark"], ["marker"]],
+        ["length", ["l"], ["l"]],
+        ["angle", ["angle"], ["angle"]],
+        ["e1", ["e1"], ["e1"]],
+        ["e2", ["e2"], ["e2"]],
+        ["k1", ["k1"], ["k1"]],
+        ["k2", ["k2"], ["k2"]],
+        ["k3", ["k3"], ["k3"]],
+        ["voltage", ["volt"], ["volt"]],
+        ["frequency", ["freq"], ["freq"]],
+        ["phase", ["phase"], ["lag"]]
+    ]
+}
