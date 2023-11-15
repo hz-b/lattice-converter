@@ -52,36 +52,7 @@ def from_madx(string: str) -> dict:
     """
     return _map_names(parse_madx(string), FROM_MADX)
 
-def _map_names(lattice_data: dict, name_map: dict) -> dict:
-    
-    elements = {}
-    for name, (other_type, other_attributes) in lattice_data["elements"].items():
-        latticejson_type = name_map.get(other_type)
-        if latticejson_type is None:
-            elements[name] = ["Drift", {"length": other_attributes.get("L", 0)}]
-            warn(UnknownElementTypeWarning(name, other_type))
-            continue
-
-        attributes = {}
-        elements[name] = [latticejson_type, attributes]
-        for other_key, value in other_attributes.items():
-            latticejson_key = name_map.get(other_key)
-            if latticejson_key is not None:
-                attributes[latticejson_key] = value
-            else:
-                warn(UnknownAttributeWarning(other_key, name))
-
-    lattices = lattice_data["lattices"]
-    root = lattice_data.get("root", tuple(lattices.keys())[-1])
-    title = lattice_data.get("title", "")
-    return dict(
-        # version=str(schema_version),
-        title=title,
-        root=root,
-        elements=elements,
-        lattices=lattices,
-    )    
-    
+def _map_names(lattice_data: dict, name_map: dict) -> dict: 
     """
     Map element/attribute names in input lattice format to element/attribute names in LatticeJSON format.
 
@@ -118,16 +89,16 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
             else:
                 warn(UnknownAttributeWarning(other_key, name))
 
-#    lattices = lattice_data["lattices"]
-    sequences = lattice_data["sequences"]
-    root = lattice_data.get("root", tuple(sequences.keys())[-1])
+    lattices = lattice_data["lattices"]
+#    sequences = lattice_data["sequences"]
+    root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
     return dict(
 #        version=str(schema_version),
         title=title,
         root=root,
         elements=elements,
-        sequences=sequences,
+        lattices=lattices,
     )
 # def to_elegant(latticejson: dict) -> str:
 #     """Convert a LatticeJSON dict to the elegant lattice file format.
