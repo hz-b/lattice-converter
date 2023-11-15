@@ -3,25 +3,49 @@ from abc import ABC, abstractproperty
 from pathlib import Path
 
 from lark import Lark, Transformer, v_args
-from lark.exceptions import LarkError
+# from lark.exceptions import LarkError
 
-from .exceptions import UndefinedVariableError
+# from .exceptions import UndefinedVariableError
+
+"""
+Definition of grammar files and creation of Lark parsers.
+"""
 
 BASE_DIR = Path(__file__).resolve().parent
 
-with (BASE_DIR / "elegant.lark").open() as file:
-    ELEGANT_PARSER = Lark(file, parser="lalr", maybe_placeholders=True)
-    file.seek(0)
-    RPN_PARSER = Lark(file, parser="lalr", start="start_rpn")
+# with (BASE_DIR / "elegant.lark").open() as file:
+#     ELEGANT_PARSER = Lark(file, parser="lalr", maybe_placeholders=True)
+#     file.seek(0)
+#     RPN_PARSER = Lark(file, parser="lalr", start="start_rpn")
 
-with (BASE_DIR / "madx.lark").open() as file:
+with (BASE_DIR / "lark-grammar-files" / "madx.lark").open() as file:
     MADX_PARSER = Lark(file, parser="lalr", maybe_placeholders=True)
-    file.seek(0)
+    file.seek(0) # Resets the file position to the start of the file
     ARITHMETIC_PARSER = Lark(file, parser="lalr", start="start_artih")
 
 
 @v_args(inline=True)
 class ArithmeticTransformer(Transformer):
+    # """
+    # A class to handle arithmetric exp.
+
+    # ...
+
+    # Attributes
+    # ----------
+    # name : str
+    #     first name of the person
+    # surname : str
+    #     family name of the person
+    # age : int
+    #    age of the person
+
+    # Methods
+    # -------
+    # info(additional=""):
+    # Prints the person's name and age.
+    # """
+    
     def __init__(self, variables=None):
         if variables is None:
             self._variables = {"pi": math.pi, "twopi": 2 * math.pi, "e": math.e}
@@ -56,17 +80,39 @@ class ArithmeticTransformer(Transformer):
             # raise UndefinedVariableError(name)
 
 
-@v_args(inline=True)
-class RPNTransformer(ArithmeticTransformer):
-    def assignment(self, value, name):
-        return super().assignment(name, value)
+# @v_args(inline=True)
+# class RPNTransformer(ArithmeticTransformer):
+#     def assignment(self, value, name):
+#         return super().assignment(name, value)
 
-    def function(self, operand, function):
-        return super().function(function, operand)
+#     def function(self, operand, function):
+#         return super().function(function, operand)
 
 
 @v_args(inline=True)
 class AbstractLatticeFileTransformer(ABC, Transformer):
+    """
+    Abstract class for a lattice file transformer.
+    A transformer transforms the lark parse-tree into a dict.
+
+    ...
+
+    Attributes
+    ----------
+    elements : dict
+        elements in the lattice
+    sequences : dict
+        sequencies in the lattice
+    commands : dict
+        commands in the lattice
+        
+    """
+    # Methods
+    # -------
+    # info(additional=""):
+    # Prints the person's name and age.
+    # """
+    
     REVERSED_SUFFIX = "_reversed"
 
     @abstractproperty
@@ -75,12 +121,14 @@ class AbstractLatticeFileTransformer(ABC, Transformer):
 
     def transform(self, tree):
         self.elements = {}
-        self.lattices = {}
+#        self.lattices = {}
+        self.sequences = {}
         self.commands = []
         super().transform(tree)
         return dict(
             elements=self.elements,
-            lattices=self.lattices,
+#            lattices=self.lattices,
+            sequences=self.sequences,
             commands=self.commands,
             variables=self.variables,
         )
@@ -97,8 +145,11 @@ class AbstractLatticeFileTransformer(ABC, Transformer):
     def attribute(self, name, value):
         return name.lower(), value
 
-    def lattice(self, name, arangement):
-        self.lattices[name.lower()] = list(arangement)
+    # def lattice(self, name, arangement):
+    #     self.lattices[name.lower()] = list(arangement)
+        
+    def sequence(self, name, arangement):
+        self.sequence[name.lower()] = list(arangement)        
 
     def arrangement(self, multiplier, is_reversed, *items):
         multiplier = int(multiplier) if multiplier is not None else 1
@@ -154,7 +205,8 @@ class AbstractLatticeFileTransformer(ABC, Transformer):
 class MADXTransformer(ArithmeticTransformer, AbstractLatticeFileTransformer):
     def sequence(self, name, *items):
         *attributes, elements = items
-        self.lattices[name.lower()] = elements
+        self.sequencies[name.lower()] = elements
+#        self.lattices[name.lower()] = elements
         self.commands.append(("name", name))
 
     def seq_element(self, name, value):
@@ -164,37 +216,55 @@ class MADXTransformer(ArithmeticTransformer, AbstractLatticeFileTransformer):
         return list(elements)
 
 
-@v_args(inline=True)
-class ElegantTransformer(RPNTransformer, AbstractLatticeFileTransformer):
-    def __init__(self):
-        super().__init__()
-        self.calc = Calculator(rpn=True)
-        self.calc.transformer._variables = self._variables
+# @v_args(inline=True)
+# class ElegantTransformer(RPNTransformer, AbstractLatticeFileTransformer):
+#     def __init__(self):
+#         super().__init__()
+#         self.calc = Calculator(rpn=True)
+#         self.calc.transformer._variables = self._variables
 
-    def string(self, item):
-        s = item[1:-1]
-        try:  # There is no syntactic distinction between a string and a variable.
-            return self.calc(s)
-        except LarkError:  # Just a string
-            return s
-
-
-class Calculator:
-    """Can evaluate simple arithmetic expressions. Used to test ArithmeticParser."""
-
-    def __init__(self, rpn=False):
-        self.parser = RPN_PARSER if rpn else ARITHMETIC_PARSER
-        self.transformer = RPNTransformer() if rpn else ArithmeticTransformer()
-
-    def __call__(self, expression):
-        return self.transformer.transform(self.parser.parse(expression))
+#     def string(self, item):
+#         s = item[1:-1]
+#         try:  # There is no syntactic distinction between a string and a variable.
+#             return self.calc(s)
+#         except LarkError:  # Just a string
+#             return s
 
 
-def parse_elegant(string: str):
-    tree = ELEGANT_PARSER.parse(string + "\n")  # TODO: remove "\n" when lark has EOF
-    return ElegantTransformer().transform(tree)
+# class Calculator:
+#     """Can evaluate simple arithmetic expressions. Used to test ArithmeticParser."""
+
+#     def __init__(self, rpn=False):
+#         self.parser = RPN_PARSER if rpn else ARITHMETIC_PARSER
+#         self.transformer = RPNTransformer() if rpn else ArithmeticTransformer()
+
+#     def __call__(self, expression):
+#         return self.transformer.transform(self.parser.parse(expression))
 
 
-def parse_madx(string: str):
+# def parse_elegant(string: str):
+#     tree = ELEGANT_PARSER.parse(string + "\n")  # TODO: remove "\n" when lark has EOF
+#     return ElegantTransformer().transform(tree)
+
+
+def parse_madx(string: str) -> dict:
+    """
+    Parse string in MADX format.
+
+    Parameters
+    ----------
+    string : str
+        Content of the input lattice file in MADX format.
+
+    Returns
+    -------
+    dict
+        Dict in MADX format.
+
+    """
+    
+    # Create lark tree
     tree = MADX_PARSER.parse(string)
+    
+    # Return tree transformed into dict
     return MADXTransformer().transform(tree)
