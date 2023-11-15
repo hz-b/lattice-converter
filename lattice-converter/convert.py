@@ -8,6 +8,12 @@ from .parse import parse_elegant, parse_madx
 # from .utils import sort_lattices
 # from .validate import schema_version
 
+"""
+Map between element/attribute names for LatticeJSON and different lattice formats.
+x - contains the name for LatticeJSON
+y - contains the name for the lattice format
+"""
+
 NAME_MAP = json.loads((Path(__file__).parent / "map.json").read_text())["map"]
 #TO_ELEGANT = {x: y[0][0] for x, *y in NAME_MAP}
 #FROM_ELEGANT = {y: x for x, *tup in NAME_MAP for y in tup[0]}
@@ -28,20 +34,42 @@ FROM_MADX = {y: x for x, *tup in NAME_MAP for y in tup[1]}
 #     return _map_names(parse_elegant(string), FROM_ELEGANT)
 
 
-def from_madx(string):
-    """Convert a MADX lattice file to a LatticeJSON dict.
+def from_madx(string: str) -> dict:
+    """
+    Convert a string in MADX lattice format to a LatticeJSON dict.
 
-    :param str string: input lattice file as string
-    :param lattice_name: name of the lattice
-    :type str, optional
-    :param description: description of the lattice
-    :type str, optional
-    :return: dict in LatticeJSON format
+    Parameters
+    ----------
+    string : str
+        Content of the input lattice file in MADX format.
+
+    Returns
+    -------
+    dict
+        Dict in LatticeJSON format.
+
     """
     return _map_names(parse_madx(string), FROM_MADX)
 
+def _map_names(lattice_data: dict, name_map: dict) -> dict:
+    """
+    Map element/attribute names in input lattice format to element/attribute names in LatticeJSON format.
 
-def _map_names(lattice_data: dict, name_map: dict):
+    Parameters
+    ----------
+    lattice_data : dict
+        Dict in the input lattice format.
+    name_map : dict
+        Dict with the map of the element/attribute names.
+
+    Returns
+    -------
+    dict
+        Dict in LatticeJSON format.
+
+    """
+
+    # Map elements
     elements = {}
     for name, (other_type, other_attributes) in lattice_data["elements"].items():
         latticejson_type = name_map.get(other_type)
@@ -50,6 +78,7 @@ def _map_names(lattice_data: dict, name_map: dict):
             warn(UnknownElementTypeWarning(name, other_type))
             continue
 
+        # Map attributes
         attributes = {}
         elements[name] = [latticejson_type, attributes]
         for other_key, value in other_attributes.items():
@@ -59,7 +88,7 @@ def _map_names(lattice_data: dict, name_map: dict):
             else:
                 warn(UnknownAttributeWarning(other_key, name))
 
-    lattices = lattice_data["lattices"]
+    lattices = lattice_data["lattices"] # What is this?
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
     return dict(
@@ -69,7 +98,6 @@ def _map_names(lattice_data: dict, name_map: dict):
         elements=elements,
         lattices=lattices,
     )
-
 
 # def to_elegant(latticejson: dict) -> str:
 #     """Convert a LatticeJSON dict to the elegant lattice file format.

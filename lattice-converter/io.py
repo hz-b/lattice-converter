@@ -24,15 +24,28 @@ from . import convert
 
 
 def load_string(string: str, input_format: str, validate: bool = True) -> dict:
-    """Deserialize a string to a LatticeJSON-compliant dictionary.
+    """
+    Convert at string to a LatticeJSON-compliant dictionary.
 
-    :param string: Content of the input lattice file.
-    :type string: str
-    :param input_format: Input format of the input lattice file.
-    :type input_format: str
-    :param validate: Whether to validate the input file.
-    :type validate: bool
-    :return dict: Returns deserialized lattice file as dict.
+    Parameters
+    ----------
+    string : str
+        Content of the input lattice file.
+    input_format : str
+        Input format of the input lattice file.
+    validate : bool, optional
+        Whether to validate the input file. The default is True.
+
+    Raises
+    ------
+    NotImplementedError
+        Error if converting to/from a lattice format that has not been implemented yet.
+
+    Returns
+    -------
+    dict
+        Lattice file as as dict.
+
     """
     if input_format == "json":
         latticejson = json.loads(string)
