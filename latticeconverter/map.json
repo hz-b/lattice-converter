@@ -6,6 +6,7 @@
         ["Quadrupole", ["kquad", "quad", "quadrupole"], ["quadrupole"]],
         ["Sextupole", ["ksext", "sext", "sextupole"], ["sextupole"]],
         ["Octupole", ["koct", "octu"], ["octupole"]],
+        ["Multipole",["mult","multipole"],["multipole"]],
         ["Cavity", ["rfca"], ["rfcavity"]],
         ["Lattice", ["line"], ["line"]],
         ["Marker", ["mark"], ["marker"]],
@@ -16,6 +17,7 @@
         ["k1", ["k1"], ["k1"]],
         ["k2", ["k2"], ["k2"]],
         ["k3", ["k3"], ["k3"]],
+        ["knl", ["knl"], ["knl"]],
         ["voltage", ["volt"], ["volt"]],
         ["frequency", ["freq"], ["freq"]],
         ["phase", ["phase"], ["lag"]]
