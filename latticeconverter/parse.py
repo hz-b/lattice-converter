@@ -70,7 +70,7 @@ class RPNTransformer(ArithmeticTransformer):
 
 
 @v_args(inline=True)
-class AbstractLatticeFileTransformer(ABC, Transformer):
+class AbstractLatticeFileTransformer(Transformer):
 #class AbstractLatticeFileTransformer(Transformer):
     REVERSED_SUFFIX = "_reversed"
 
