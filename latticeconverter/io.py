@@ -126,8 +126,8 @@ def save_string(latticejson: dict, output_format: str) -> str:
 
     if output_format == "json":
         return format_json(latticejson)
+    elif output_format == "madx":
+        return convert.to_madx(latticejson)
     # elif output_format == "lte":
     #     return convert.to_elegant(latticejson)
-    # elif output_format == "madx":
-    #     return convert.to_madx(latticejson)
     raise NotImplementedError(f"Converting to {output_format} is not implemented!")

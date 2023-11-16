@@ -6,7 +6,7 @@ from warnings import warn
 from .exceptions import UnknownAttributeWarning, UnknownElementTypeWarning
 from .parse import parse_madx
 #from .parse import parse_elegant, parse_madx
-# from .utils import sort_lattices
+from .utils import sort_lattices
 # from .validate import schema_version
 
 """
@@ -18,7 +18,7 @@ y - contains the name for the lattice format
 NAME_MAP = json.loads((Path(__file__).parent / "map.json").read_text())["map"]
 #TO_ELEGANT = {x: y[0][0] for x, *y in NAME_MAP}
 #FROM_ELEGANT = {y: x for x, *tup in NAME_MAP for y in tup[0]}
-#TO_MADX = {x: y[1][0] for x, *y in NAME_MAP}
+TO_MADX = {x: y[1][0] for x, *y in NAME_MAP}
 FROM_MADX = {y: x for x, *tup in NAME_MAP for y in tup[1]}
 
 
@@ -50,6 +50,10 @@ def from_madx(string: str) -> dict:
         Dict in LatticeJSON format.
 
     """
+    map_names = _map_names(parse_madx(string), FROM_MADX)
+    
+    
+    
     return _map_names(parse_madx(string), FROM_MADX)
 
 def _map_names(lattice_data: dict, name_map: dict) -> dict: 
@@ -89,8 +93,7 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
             else:
                 warn(UnknownAttributeWarning(other_key, name))
 
-    lattices = lattice_data["lattices"]
-#    sequences = lattice_data["sequences"]
+    lattices = lattice_data["lattices"]    
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
     return dict(
@@ -100,6 +103,7 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
         elements=elements,
         lattices=lattices,
     )
+
 # def to_elegant(latticejson: dict) -> str:
 #     """Convert a LatticeJSON dict to the elegant lattice file format.
 
@@ -125,26 +129,37 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
 #     return "\n".join(strings)
 
 
-# def to_madx(latticejson: dict) -> str:
-#     """Convert a LatticeJSON dict to the MADX lattice file format.
+def to_madx(latticejson: dict) -> str:
+    """
+    Convert a LatticeJSON dict to the MADX lattice file format.
 
-#     :param lattice_dict dict: dict in LatticeJSON format
-#     :return: string with in elegant lattice file format
-#     """
-#     elements = latticejson["elements"]
-#     lattices = latticejson["lattices"]
+    Parameters
+    ----------
+    latticejson : dict
+        dict in LatticeJSON format.
 
-#     strings = [f"TITLE, \"{latticejson['title']}\";"]
-#     element_template = "{}: {}, {};".format
-#     # TODO: check if equivalent type exists in madx
-#     for name, (type_, attributes) in elements.items():
-#         attrs = ", ".join(f"{TO_MADX[k]}={v}" for k, v in attributes.items())
-#         elegant_type = TO_MADX[type_]
-#         strings.append(element_template(name, elegant_type, attrs))
+    Returns
+    -------
+    str
+        string in madx lattice file format.
 
-#     lattice_template = "{}: line=({});".format
-#     for name, children in sort_lattices(latticejson).items():
-#         strings.append(lattice_template(name, ", ".join(children)))
+    """
 
-#     strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
-#     return "\n".join(strings)
+    elements = latticejson["elements"]
+    lattices = latticejson["lattices"]
+
+    strings = [f"TITLE, \"{latticejson['title']}\";"]
+    element_template = "{}: {}, {};".format
+    
+    # TODO: check if equivalent type exists in madx
+    for name, (type_, attributes) in elements.items():
+        attrs = ", ".join(f"{TO_MADX[k]}={v}" for k, v in attributes.items())
+        elegant_type = TO_MADX[type_]
+        strings.append(element_template(name, elegant_type, attrs))
+
+    lattice_template = "{}: line=({});".format
+    for name, children in sort_lattices(latticejson).items():
+        strings.append(lattice_template(name, ", ".join(children)))
+
+    strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
+    return "\n".join(strings)
