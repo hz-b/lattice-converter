@@ -5,7 +5,8 @@
 .devcontainer
 
 # Byte-compiled / optimized / DLL files / Cache
-**/__pycache__/
+latticeconverter/__pycache__/
+__pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
