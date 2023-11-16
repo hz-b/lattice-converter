@@ -5,7 +5,7 @@
 .devcontainer
 
 # Byte-compiled / optimized / DLL files / Cache
-latticeconverter/__pycache__/
+latticeconverter/__pycache__/__init__.cpython-311.pyc
 __pycache__/
 *.py[cod]
 *$py.class
