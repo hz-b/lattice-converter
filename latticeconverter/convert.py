@@ -76,7 +76,14 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
     # Map elements
     elements = {}
     for name, (other_type, other_attributes) in lattice_data["elements"].items():
-        latticejson_type = name_map.get(other_type)
+        
+        # Check if the element type refers to another element
+        # If so change the type and add the attributes
+        if other_type in lattice_data["elements"]: 
+            (other_type, additional_attributes) = lattice_data["elements"].get(other_type)
+            other_attributes.update(additional_attributes)
+            
+        latticejson_type = name_map.get(other_type)        
         if latticejson_type is None:
             elements[name] = ["Drift", {"length": other_attributes.get("L", 0)}]
             warn(UnknownElementTypeWarning(name, other_type))
@@ -91,7 +98,15 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
                 attributes[latticejson_key] = value
             else:
                 warn(UnknownAttributeWarning(other_key, name))
-
+                
+        # Add additional attributes if they exist
+        # for other_key, value in additional_attributes.items():
+        #     latticejson_key = name_map.get(other_key)
+        #     if latticejson_key is not None:
+        #         attributes[latticejson_key] = value
+        #     else:
+        #         warn(UnknownAttributeWarning(other_key, name))
+        
     lattices = lattice_data["lattices"]    
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
