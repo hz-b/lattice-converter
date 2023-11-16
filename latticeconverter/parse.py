@@ -13,10 +13,10 @@ Define grammar files and create lark parsers.
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# with (BASE_DIR / "elegant.lark").open() as file:
-#     ELEGANT_PARSER = Lark(file, parser="lalr", maybe_placeholders=True)
-#     file.seek(0)
-#     RPN_PARSER = Lark(file, parser="lalr", start="start_rpn")
+with (BASE_DIR / "lark-grammar-files" / "elegant.lark").open() as file:
+    ELEGANT_PARSER = Lark(file, parser="lalr", maybe_placeholders=True)
+    file.seek(0)
+    RPN_PARSER = Lark(file, parser="lalr", start="start_rpn")
 
 with (BASE_DIR / "lark-grammar-files" / "madx.lark").open() as file:
     MADX_PARSER = Lark(file, parser="lalr", maybe_placeholders=True)
@@ -172,37 +172,66 @@ class MADXTransformer(ArithmeticTransformer, AbstractLatticeFileTransformer):
         return list(elements)
 
 
-# @v_args(inline=True)
-# class ElegantTransformer(RPNTransformer, AbstractLatticeFileTransformer):
-#     def __init__(self):
-#         super().__init__()
-#         self.calc = Calculator(rpn=True)
-#         self.calc.transformer._variables = self._variables
+@v_args(inline=True)
+class ElegantTransformer(RPNTransformer, AbstractLatticeFileTransformer):
+    def __init__(self):
+        super().__init__()
+        self.calc = Calculator(rpn=True)
+        self.calc.transformer._variables = self._variables
 
-#     def string(self, item):
-#         s = item[1:-1]
-#         try:  # There is no syntactic distinction between a string and a variable.
-#             return self.calc(s)
-#         except LarkError:  # Just a string
-#             return s
-
-
-# class Calculator:
-#     """Can evaluate simple arithmetic expressions. Used to test ArithmeticParser."""
-
-#     def __init__(self, rpn=False):
-#         self.parser = RPN_PARSER if rpn else ARITHMETIC_PARSER
-#         self.transformer = RPNTransformer() if rpn else ArithmeticTransformer()
-
-#     def __call__(self, expression):
-#         return self.transformer.transform(self.parser.parse(expression))
+    def string(self, item):
+        s = item[1:-1]
+        try:  # There is no syntactic distinction between a string and a variable.
+            return self.calc(s)
+        except LarkError:  # Just a string
+            return s
 
 
-# def parse_elegant(string: str):
-#     tree = ELEGANT_PARSER.parse(string + "\n")  # TODO: remove "\n" when lark has EOF
-#     return ElegantTransformer().transform(tree)
+class Calculator:
+    """Can evaluate simple arithmetic expressions. Used to test ArithmeticParser."""
+
+    def __init__(self, rpn=False):
+        self.parser = RPN_PARSER if rpn else ARITHMETIC_PARSER
+        self.transformer = RPNTransformer() if rpn else ArithmeticTransformer()
+
+    def __call__(self, expression):
+        return self.transformer.transform(self.parser.parse(expression))
 
 
-def parse_madx(string: str):
+def parse_elegant(string: str) -> dict:
+    """
+    Parse a string in elegant format.
+
+    Parameters
+    ----------
+    string : str
+        Input string in elegant format.
+
+    Returns
+    -------
+    dict
+        Output dict in LatticeJSON format.
+
+    """
+    tree = ELEGANT_PARSER.parse(string + "\n")  # TODO: remove "\n" when lark has EOF
+    return ElegantTransformer().transform(tree)
+
+
+def parse_madx(string: str) -> dict:
+    """
+    Parse a string in madx format.
+
+    Parameters
+    ----------
+    string : str
+        Input string in madx format.
+
+    Returns
+    -------
+    dict
+        Output dict in LatticeJSON format.
+
+    """
+    
     tree = MADX_PARSER.parse(string)
     return MADXTransformer().transform(tree)

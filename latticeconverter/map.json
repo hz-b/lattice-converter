@@ -9,7 +9,7 @@
         ["Multipole",["mult","multipole"],["multipole"]],
         ["Cavity", ["rfca"], ["rfcavity"]],
         ["Lattice", ["line"], ["line"]],
-        ["Marker", ["mark"], ["marker"]],
+        ["Marker", ["mark","marker"], ["marker"]],
         ["length", ["l"], ["l"]],
         ["angle", ["angle"], ["angle"]],
         ["e1", ["e1"], ["e1"]],

@@ -51,10 +51,8 @@ def load_string(string: str, input_format: str, validate: bool = True) -> dict:
         latticejson = json.loads(string)
     elif input_format == "madx":
         latticejson = convert.from_madx(string)        
-    # elif input_format == "lte":
-    #     latticejson = convert.from_elegant(string)
-    # elif input_format == "madx":
-    #     latticejson = convert.from_madx(string)
+    elif input_format == "elegant":
+        latticejson = convert.from_elegant(string)
     else:
         raise NotImplementedError(f"Unknown lattice file format: {input_format}.")
 
@@ -128,6 +126,6 @@ def save_string(latticejson: dict, output_format: str) -> str:
         return format_json(latticejson)
     elif output_format == "madx":
         return convert.to_madx(latticejson)
-    # elif output_format == "lte":
-    #     return convert.to_elegant(latticejson)
+    elif output_format == "elegant":
+        return convert.to_elegant(latticejson)
     raise NotImplementedError(f"Converting to {output_format} is not implemented!")
