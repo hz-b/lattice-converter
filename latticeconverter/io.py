@@ -5,7 +5,7 @@ import json
 # from urllib.request import urlopen
 
 from . import convert
-# from .format import format_json
+from .format import format_json
 # from .validate import validate as _validate
 
 
@@ -101,19 +101,33 @@ def load_string(string: str, input_format: str, validate: bool = True) -> dict:
 #     path.write_text(save_string(latticejson, output_format))
 
 
-# def save_string(latticejson: dict, output_format: str) -> str:
-#     """Serialize LatticeJSON-compliant dictionary to different lattice file formats.
+def save_string(latticejson: dict, output_format: str) -> str:
+    """
+    Serialize LatticeJSON-compliant dictionary to different lattice file formats.
 
-#     :param latticejson dict: A LatticeJSON-compliant dictionary.
-#     :param output_format str: Output format.
-#     :raises NotImplementedError: Is raised for unknown lattice file formats.
-#     :return: Returns lattice file in `output_format` as string.
-#     :rtype: str
-#     """
-#     if output_format == "json":
-#         return format_json(latticejson)
-#     elif output_format == "lte":
-#         return convert.to_elegant(latticejson)
-#     elif output_format == "madx":
-#         return convert.to_madx(latticejson)
-#     raise NotImplementedError(f"Converting to {output_format} is not implemented!")
+    Parameters
+    ----------
+    latticejson : dict
+        A LatticeJSON-compliant dictionary.
+    output_format : str
+        Output format.
+
+    Raises
+    ------
+    NotImplementedError
+        Is raised for unknown lattice file formats.
+
+    Returns
+    -------
+    str
+        Returns lattice file in `output_format` as string.
+
+    """
+
+    if output_format == "json":
+        return format_json(latticejson)
+    # elif output_format == "lte":
+    #     return convert.to_elegant(latticejson)
+    # elif output_format == "madx":
+    #     return convert.to_madx(latticejson)
+    raise NotImplementedError(f"Converting to {output_format} is not implemented!")
