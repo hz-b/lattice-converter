@@ -153,6 +153,9 @@ class AbstractLatticeFileTransformer(Transformer):
 
     def command(self, *items):
         self.commands.append(items)
+        
+    def array(self, *items):
+        return list(items)
 
 
 @v_args(inline=True)
@@ -169,35 +172,35 @@ class MADXTransformer(ArithmeticTransformer, AbstractLatticeFileTransformer):
         return list(elements)
 
 
-@v_args(inline=True)
-class ElegantTransformer(RPNTransformer, AbstractLatticeFileTransformer):
-    def __init__(self):
-        super().__init__()
-        self.calc = Calculator(rpn=True)
-        self.calc.transformer._variables = self._variables
+# @v_args(inline=True)
+# class ElegantTransformer(RPNTransformer, AbstractLatticeFileTransformer):
+#     def __init__(self):
+#         super().__init__()
+#         self.calc = Calculator(rpn=True)
+#         self.calc.transformer._variables = self._variables
 
-    def string(self, item):
-        s = item[1:-1]
-        try:  # There is no syntactic distinction between a string and a variable.
-            return self.calc(s)
-        except LarkError:  # Just a string
-            return s
-
-
-class Calculator:
-    """Can evaluate simple arithmetic expressions. Used to test ArithmeticParser."""
-
-    def __init__(self, rpn=False):
-        self.parser = RPN_PARSER if rpn else ARITHMETIC_PARSER
-        self.transformer = RPNTransformer() if rpn else ArithmeticTransformer()
-
-    def __call__(self, expression):
-        return self.transformer.transform(self.parser.parse(expression))
+#     def string(self, item):
+#         s = item[1:-1]
+#         try:  # There is no syntactic distinction between a string and a variable.
+#             return self.calc(s)
+#         except LarkError:  # Just a string
+#             return s
 
 
-def parse_elegant(string: str):
-    tree = ELEGANT_PARSER.parse(string + "\n")  # TODO: remove "\n" when lark has EOF
-    return ElegantTransformer().transform(tree)
+# class Calculator:
+#     """Can evaluate simple arithmetic expressions. Used to test ArithmeticParser."""
+
+#     def __init__(self, rpn=False):
+#         self.parser = RPN_PARSER if rpn else ARITHMETIC_PARSER
+#         self.transformer = RPNTransformer() if rpn else ArithmeticTransformer()
+
+#     def __call__(self, expression):
+#         return self.transformer.transform(self.parser.parse(expression))
+
+
+# def parse_elegant(string: str):
+#     tree = ELEGANT_PARSER.parse(string + "\n")  # TODO: remove "\n" when lark has EOF
+#     return ElegantTransformer().transform(tree)
 
 
 def parse_madx(string: str):
