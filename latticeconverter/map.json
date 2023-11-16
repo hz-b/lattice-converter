@@ -10,6 +10,9 @@
         ["Cavity", ["rfca"], ["rfcavity"]],
         ["Lattice", ["line"], ["line"]],
         ["Marker", ["mark","marker"], ["marker"]],
+        ["Monitor", ["monitor"], ["monitor"]],
+        ["HorizontalSteerer", ["hkick","hkicker"], ["hkicker"]],
+        ["VerticalSteerer", ["vkick","vkicker"], ["vkicker"]],
         ["length", ["l"], ["l"]],
         ["angle", ["angle"], ["angle"]],
         ["e1", ["e1"], ["e1"]],
@@ -18,6 +21,7 @@
         ["k2", ["k2"], ["k2"]],
         ["k3", ["k3"], ["k3"]],
         ["knl", ["knl"], ["knl"]],
+        ["tilt", [""], ["tilt"]],
         ["voltage", ["volt"], ["volt"]],
         ["frequency", ["freq"], ["freq"]],
         ["phase", ["phase"], ["lag"]]
