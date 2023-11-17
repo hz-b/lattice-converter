@@ -52,7 +52,7 @@ def from_madx(string: str) -> dict:
     dict
         Dict in LatticeJSON format.
 
-    """
+    """    
     return _map_names(parse_madx(string), FROM_MADX)
 
 def _map_names(lattice_data: dict, name_map: dict) -> dict: 
@@ -98,24 +98,18 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
                 attributes[latticejson_key] = value
             else:
                 warn(UnknownAttributeWarning(other_key, name))
-                
-        # Add additional attributes if they exist
-        # for other_key, value in additional_attributes.items():
-        #     latticejson_key = name_map.get(other_key)
-        #     if latticejson_key is not None:
-        #         attributes[latticejson_key] = value
-        #     else:
-        #         warn(UnknownAttributeWarning(other_key, name))
-        
+                        
     lattices = lattice_data["lattices"]    
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
+    commands = lattice_data["commands"]
     return dict(
 #        version=str(schema_version),
         title=title,
         root=root,
         elements=elements,
         lattices=lattices,
+        commands=commands
     )
 
 def to_elegant(latticejson: dict) -> str:
@@ -135,7 +129,7 @@ def to_elegant(latticejson: dict) -> str:
     """
 
     elements = latticejson["elements"]
-    lattices = latticejson["lattices"]
+#    lattices = latticejson["lattices"]
 
     strings = [f"! TITLE: {latticejson['title']}"]
     element_template = "{}: {}, {}".format
@@ -171,19 +165,41 @@ def to_madx(latticejson: dict) -> str:
 
     elements = latticejson["elements"]
     lattices = latticejson["lattices"]
+    commands = latticejson["commands"]
 
-    strings = [f"TITLE, \"{latticejson['title']}\";"]
-    element_template = "{}: {}, {};".format
+    strings = []
     
     # TODO: check if equivalent type exists in madx
     for name, (type_, attributes) in elements.items():
         attrs = ", ".join(f"{TO_MADX[k]}={v}" for k, v in attributes.items())
         elegant_type = TO_MADX[type_]
-        strings.append(element_template(name, elegant_type, attrs))
+        
+        # Handle if an element has no attributes
+        if len(attrs) > 0:
+            element_template = "{}: {}, {};".format
+            strings.append(element_template(name, elegant_type, attrs))
+        else:
+            element_template = "{}: {};".format
+            strings.append(element_template(name, elegant_type))  
+    
+    # Check of the input file was a sequence file
+    if "seq" in list(zip(*commands))[0]:
+        substr = []
+        name = latticejson["commands"][0][1]
+        substr.append(f"{name}: SEQUENCE,")
+        for attr, value in latticejson["commands"][0][2]:
+            substr.append(f"{attr} = {value}")
+        substr.append(";\n")
+        strings.append("".join(substr))
+        at_template = "{}, at = {};".format
+        for name, value in lattices[name]:
+            strings.append(at_template(name, value))
+        strings.append("ENDSEQUENCE;\n")
+    else:
+        strings.append(f"TITLE, \"{latticejson['title']}\";")
+        lattice_template = "{}: line=({});".format
+        for name, children in sort_lattices(latticejson).items():
+            strings.append(lattice_template(name, ", ".join(children)))
+        strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
 
-    lattice_template = "{}: line=({});".format
-    for name, children in sort_lattices(latticejson).items():
-        strings.append(lattice_template(name, ", ".join(children)))
-
-    strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
     return "\n".join(strings)
