@@ -18,6 +18,7 @@ TO_ELEGANT = {x: y[0][0] for x, *y in NAME_MAP}
 FROM_ELEGANT = {y: x for x, *tup in NAME_MAP for y in tup[0]}
 TO_MADX = {x: y[1][0] for x, *y in NAME_MAP}
 FROM_MADX = {y: x for x, *tup in NAME_MAP for y in tup[1]}
+TO_PYAT= {x: y[2][0] for x, *y in NAME_MAP}
 
 
 def from_elegant(string: str) -> dict:
@@ -174,7 +175,7 @@ def to_madx(latticejson: dict) -> str:
         attrs = ", ".join(f"{TO_MADX[k]}={v}" for k, v in attributes.items())
         elegant_type = TO_MADX[type_]
         
-        # Handle if an element has no attributes
+        # Handle if an element has no attributes (e.g. a marker)
         if len(attrs) > 0:
             element_template = "{}: {}, {};".format
             strings.append(element_template(name, elegant_type, attrs))
@@ -182,8 +183,10 @@ def to_madx(latticejson: dict) -> str:
             element_template = "{}: {};".format
             strings.append(element_template(name, elegant_type))  
     
-    # Check of the input file was a sequence file
-    if "seq" in list(zip(*commands))[0]:
+    # Handle sequence vs line files
+    if "sequence" in list(zip(*commands))[0]:
+        
+        # Add the sequence name and attributes
         substr = []
         name = latticejson["commands"][0][1]
         substr.append(f"{name}: SEQUENCE,")
@@ -191,6 +194,8 @@ def to_madx(latticejson: dict) -> str:
             substr.append(f"{attr} = {value}")
         substr.append(";\n")
         strings.append("".join(substr))
+        
+        # Handle the at definitions
         at_template = "{}, at = {};".format
         for name, value in lattices[name]:
             strings.append(at_template(name, value))
@@ -202,4 +207,43 @@ def to_madx(latticejson: dict) -> str:
             strings.append(lattice_template(name, ", ".join(children)))
         strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
 
+    return "\n".join(strings)
+
+def to_pyat(latticejson: dict) -> str:
+    """
+    Convert a LatticeJSON dict to the pyat lattice file format.
+
+    Parameters
+    ----------
+    latticejson : dict
+        dict in LatticeJSON format.
+
+    Returns
+    -------
+    str
+        string with in pyat lattice file format.
+
+    """
+    
+    function_name = latticejson.get('title')
+    if function_name == "":
+        function_name = "lattice"
+    strings = [f"def {function_name}():\n"]
+    
+    elements = latticejson["elements"]
+
+    element_template = "    {} = {}('{}', {})".format
+      # TODO: check if equivalent type exists in pyat
+    for name, (type_, attributes) in elements.items():
+        attrs = ", ".join(f"{TO_PYAT[k]}={v}" for k, v in attributes.items())
+        pyat_type = TO_PYAT[type_]
+        strings.append(element_template(name, pyat_type, name, attrs))
+        
+    lattices = latticejson["lattices"]
+
+    # lattice_template = "{}: line=({})".format
+    # for name, children in sort_lattices(latticejson).items():
+    #     strings.append(lattice_template(name, ", ".join(children)))
+
+    strings.append(f"USE, {latticejson['root']}\n")
     return "\n".join(strings)
