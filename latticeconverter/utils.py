@@ -212,3 +212,71 @@ def line2seq(sequence: list , elements: dict) -> list:
             pos += length
         
     return seq_list
+
+def map_to_corrector(elements: dict):
+    """
+    
+    Modify the mapping of the correctors to not have separate elements for hor/ver correctors
+
+    Parameters
+    ----------
+    elements : dict
+        dict with elements
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    for elem, (elem_type,attrs) in elements.items():
+        
+        if elem_type == "HorizontalSteerer":            
+            hkick = attrs.pop('hkick',0)
+            vkick = 0                 
+            # Change type to steerer and add kick_plane attribute   
+            elements[elem][0] = "Steerer"
+            attrs.update({"kick_plane": "h", "hkick": hkick, "vkick": vkick})                      
+        elif elem_type == "VerticalSteerer":
+            hkick = 0 
+            vkick = attrs.pop('vkick',0)             
+            # Change type to steerer and a kick_plane attribute
+            elements[elem][0] = "Steerer"
+            attrs.update({"kick_plane": "v", "hkick": hkick, "vkick": vkick})           
+        elif elem_type == "Steerer":
+            hkick = attrs.pop('hkick',0)  
+            vkick = attrs.pop('vkick',0)
+            attrs.update({"kick_plane": "hv", "hkick": hkick, "vkick": vkick})
+            
+def map_from_corrector(elements: dict):
+    """
+    
+    Modify the mapping of the correctors to get separate elements for hor/ver correctors
+
+    Parameters
+    ----------
+    elements : dict
+        dict with elements
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    for elem, (elem_type,attrs) in elements.items():
+        
+        if elem_type == "Steerer":
+            
+            kick_plane =  attrs.pop('kick_plane')
+            
+            if kick_plane == "h":
+                elements[elem][0] = "HorizontalSteerer"
+                kick = attrs.pop("hkick")
+                attrs.pop("vkick")
+                attrs.update({"kick": kick})
+            elif kick_plane == "v":
+                elements[elem][0] = "VerticalSteerer"
+                kick = attrs.pop("vkick")
+                attrs.pop("hkick")
+                attrs.update({"kick": kick})
