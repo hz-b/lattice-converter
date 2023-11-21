@@ -5,7 +5,7 @@ from warnings import warn
 
 from .exceptions import UnknownAttributeWarning, UnknownElementTypeWarning
 from .parse import parse_elegant, parse_madx
-from .utils import sort_lattices
+from .utils import sort_lattices, seq2line, line2seq
 # from .validate import schema_version
 
 """
@@ -42,6 +42,7 @@ def from_elegant(string: str) -> dict:
 def from_madx(string: str) -> dict:
     """
     Convert a string in MADX lattice format to a LatticeJSON dict.
+    Is able to handle input in both line and sequence format. For a sequence drifts are generated.
 
     Parameters
     ----------
@@ -54,7 +55,22 @@ def from_madx(string: str) -> dict:
         Dict in LatticeJSON format.
 
     """    
-    return _map_names(parse_madx(string), FROM_MADX)
+    
+    latticejson = _map_names(parse_madx(string), FROM_MADX)
+    
+    # Handle if input is a sequence file
+    commands = latticejson["commands"]
+    if "sequence" in list(zip(*commands))[0]:
+    
+        lattices = latticejson["lattices"]
+        elements = latticejson["elements"]
+        sequence = lattices[list(zip(*commands))[1][0]]
+
+        # Add drifts
+        new_sequence = seq2line(sequence, elements)
+        lattices[list(zip(*commands))[1][0]] = new_sequence
+    
+    return latticejson
 
 def _map_names(lattice_data: dict, name_map: dict) -> dict: 
     """
@@ -93,12 +109,17 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
         # Map attributes
         attributes = {}
         elements[name] = [latticejson_type, attributes]
-        for other_key, value in other_attributes.items():
-            latticejson_key = name_map.get(other_key)
-            if latticejson_key is not None:
-                attributes[latticejson_key] = value
-            else:
-                warn(UnknownAttributeWarning(other_key, name))
+        
+        # Handle if no attributes exist
+        if not other_attributes:
+            attributes['length'] = 0
+        else:
+            for other_key, value in other_attributes.items():
+                latticejson_key = name_map.get(other_key)
+                if latticejson_key is not None:
+                    attributes[latticejson_key] = value
+                else:
+                    warn(UnknownAttributeWarning(other_key, name))
                         
     lattices = lattice_data["lattices"]    
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
@@ -175,17 +196,22 @@ def to_madx(latticejson: dict) -> str:
         attrs = ", ".join(f"{TO_MADX[k]}={v}" for k, v in attributes.items())
         elegant_type = TO_MADX[type_]
         
-        # Handle if an element has no attributes (e.g. a marker)
-        if len(attrs) > 0:
-            element_template = "{}: {}, {};".format
-            strings.append(element_template(name, elegant_type, attrs))
-        else:
-            element_template = "{}: {};".format
-            strings.append(element_template(name, elegant_type))  
-    
-    # Handle sequence vs line files
-    if "sequence" in list(zip(*commands))[0]:
+        # Add attributes
+        element_template = "{}: {}, {};".format
+        strings.append(element_template(name, elegant_type, attrs))
         
+        # # Handle if an element has no attributes (e.g. a marker)
+        # if len(attrs) > 0:
+        #     element_template = "{}: {}, {};".format
+        #     strings.append(element_template(name, elegant_type, attrs))
+        # else:
+        #     element_template = "{}: {};".format
+        #     strings.append(element_template(name, elegant_type)) 
+               
+    # Handle if input is a sequence file
+    commands = latticejson["commands"]
+    if "sequence" in list(zip(*commands))[0]:
+            
         # Add the sequence name and attributes
         substr = []
         name = latticejson["commands"][0][1]
@@ -195,18 +221,21 @@ def to_madx(latticejson: dict) -> str:
         substr.append(";\n")
         strings.append("".join(substr))
         
-        # Handle the at definitions
+        # Add the at definitions
+        root = latticejson["root"]
+        new_sequence = line2seq(lattices[root],elements)
         at_template = "{}, at = {};".format
-        for name, value in lattices[name]:
-            strings.append(at_template(name, value))
+        for name, pos in new_sequence:
+            strings.append(at_template(name, pos))
         strings.append("ENDSEQUENCE;\n")
+        
     else:
         strings.append(f"TITLE, \"{latticejson['title']}\";")
         lattice_template = "{}: line=({});".format
         for name, children in sort_lattices(latticejson).items():
             strings.append(lattice_template(name, ", ".join(children)))
-        strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
-
+            strings.append(f"USE, SEQUENCE={latticejson['root']};\n")
+            
     return "\n".join(strings)
 
 def to_pyat(latticejson: dict) -> str:

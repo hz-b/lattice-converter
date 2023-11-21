@@ -1,6 +1,7 @@
 from itertools import chain
 from warnings import warn
-
+from .exceptions import ElementsOverlapError
+import numpy as np
 
 # def tree(latticejson, name=None):
 #     lattices = latticejson["lattices"]
@@ -92,3 +93,122 @@ def sort_lattices(latticejson, root=None, keep_unused=False):
 #                 yield child
 
 #     return _helper(start_lattice if start_lattice is not None else latticejson["root"])
+
+def seq2line(sequence: list , elements: dict) -> list:
+    """
+    
+    Add drifts to MADX sequence to translate from sequence format to lines format. So far only the default at reference point of centre can be handled.
+    The drift spaces are generated according to the same principle as in madx.
+    
+    1. When the distance between the exit of previous element and the entrance of the next element is positive
+       and greater than 1 μm a drift is generated.
+       
+    2. When the absolute value of the distance between the exit of the previous element the entrance
+       of the next element is less than 1 μm no drift space is generated.
+       
+    3. When the distance between the exit of the previous element and the entrance of the next
+       element is negative and less than -1 μm the elements are considered overlapping and an error is generated.
+    
+    Parameters
+    ----------
+    sequence : list
+        Input sequence with element names and positions.
+    elements : dict
+        Dict of all elements.
+
+    Returns
+    -------
+    list
+        Output list with drifts added between the elements.
+
+    """
+   
+    # Separate sequence of elements and position
+    #elem_seq, position = list(zip(*sequence))
+    
+    # Define the threshold for generating drifts
+    threshold = 1e-6
+       
+    # Add drifts to list
+    drift_nbr = 0
+    elem_seq = []
+    elem_exit = 0.0 # s position of the exit of previous element
+    for elem, pos in sequence:
+        
+        # Get length of element
+        elem_length = elements[elem][1]['length']
+        
+        # Entrance position of element
+        elem_entrance = pos-elem_length/2
+        
+        # Distance between entrance of the element and exit of previous element
+        distance = elem_entrance-elem_exit
+        
+        # Generate drifts
+        if np.absolute(distance) < threshold:
+            # Elements are considered to sit next to each other and no drift is generated
+            
+            # Add element to list
+            elem_seq.append(elem)
+            
+            # Update the exit position
+            elem_exit += elem_length
+            
+        elif distance < -threshold:
+            # Elements are considered to overlap
+            raise ElementsOverlapError(elem,pos)
+            
+        elif distance > threshold:
+            # A drift is generated and added to the lattice
+            
+            # Create drift element
+            new_drift = "drift_" + str(drift_nbr)
+            drift_nbr += 1
+                       
+            # Add drift to element dict         
+            elements[new_drift] = ['Drift', {'length':  distance}]
+            
+            # Add drift and element to list
+            elem_seq.append(new_drift)
+            elem_seq.append(elem)
+            
+            # Update the exit position
+            elem_exit += distance + elem_length
+                                   
+    return elem_seq
+
+def line2seq(sequence: list , elements: dict) -> list:
+    """
+    
+    Remove drifts from MADX lines to translate from lines to sequence format. So far only the default at reference point of centre can be handled.
+
+    Parameters
+    ----------
+    sequence : list
+        Input list with drifts added between the elements.
+    elements : dict
+        Dict of all elements.
+
+    Returns
+    -------
+    list
+        Output sequence with element names and positions.
+
+    """
+        
+    seq_list = []
+    pos = 0.0
+    for elem in sequence:
+               
+        # Check if element is drift
+        if elements[elem][0] == "Drift":
+            # Add the length of the drift to the position
+            pos += elements[elem][1]["length"]
+        else:
+            length = elements[elem][1]["length"]
+            seq_list.append((elem,pos+length/2))
+            
+            # Add the length of the element to the position
+            pos += length
+        
+    return seq_list

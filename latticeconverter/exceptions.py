@@ -50,3 +50,9 @@ class UndefinedVariableError(Exception):
 
     def __init__(self, name, *args, **kwargs):
         super().__init__(f"The variable '{name}' is not defined!", *args, **kwargs)
+
+class ElementsOverlapError(Exception):
+    """Raised if an element overlaps with the previous element in a sequence."""
+
+    def __init__(self, elem, pos, *args, **kwargs):
+        super().__init__(f"Element {elem} at position {pos} overlap with previous element!", *args, **kwargs)
