@@ -5,7 +5,7 @@ from warnings import warn
 
 from .exceptions import UnknownAttributeWarning, UnknownElementTypeWarning
 from .parse import parse_elegant, parse_madx
-from .utils import sort_lattices, seq2line, line2seq
+from .utils import sort_lattices, seq2line, line2seq, map_to_corrector, map_from_corrector
 # from .validate import schema_version
 
 """
@@ -105,12 +105,12 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
             elements[name] = ["Drift", {"length": other_attributes.get("L", 0)}]
             warn(UnknownElementTypeWarning(name, other_type))
             continue
-
+        
         # Map attributes
         attributes = {}
         elements[name] = [latticejson_type, attributes]
         
-        # Handle if no attributes exist
+        # Add length attribute if no attributes exists
         if not other_attributes:
             attributes['length'] = 0
         else:
@@ -120,7 +120,10 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
                     attributes[latticejson_key] = value
                 else:
                     warn(UnknownAttributeWarning(other_key, name))
-                        
+                    
+    # Handle mapping of correctors to not have separate elements for hor/ver
+    map_to_corrector(elements)
+
     lattices = lattice_data["lattices"]    
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
@@ -149,7 +152,7 @@ def to_elegant(latticejson: dict) -> str:
         string with in elegant lattice file format.
 
     """
-
+    
     elements = latticejson["elements"]
 #    lattices = latticejson["lattices"]
 
@@ -190,6 +193,9 @@ def to_madx(latticejson: dict) -> str:
     commands = latticejson["commands"]
 
     strings = []
+    
+    # Handle mapping of correctors to get back separate elements for hor/ver
+    map_from_corrector(elements)
     
     # TODO: check if equivalent type exists in madx
     for name, (type_, attributes) in elements.items():

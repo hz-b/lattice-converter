@@ -13,6 +13,7 @@
         ["Monitor", ["monitor"], ["monitor"], ["Monitor"]],
         ["HorizontalSteerer", ["hkick","hkicker"], ["hkicker"], ["Corrector"]],
         ["VerticalSteerer", ["vkick","vkicker"], ["vkicker"], ["Corrector"]],
+        ["Steerer", ["kick","kicker"], ["kicker"], ["Corrector"]],
         ["length", ["l"], ["l"], ["length"]],
         ["angle", ["angle"], ["angle"], ["bending_angle"]],
         ["e1", ["e1"], ["e1"], ["EntranceAngle"]],
@@ -21,7 +22,8 @@
         ["k2", ["k2"], ["k2"], ["h"]],
         ["k3", ["k3"], ["k3"], ["test"]],
         ["knl", ["knl"], ["knl"], ["test"]],
-        ["tilt", [""], ["tilt"], ["tilt"]],
+        ["kick", ["kick"], ["kick"], ["KickAngle"]],
+        ["tilt", ["tilt"], ["tilt"], ["test"]],
         ["voltage", ["volt"], ["volt"], ["voltage"]],
         ["frequency", ["freq"], ["freq"], ["frequency"]],
         ["phase", ["phase"], ["lag"], ["TimeLag"]]
