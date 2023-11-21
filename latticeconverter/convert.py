@@ -199,15 +199,7 @@ def to_madx(latticejson: dict) -> str:
         # Add attributes
         element_template = "{}: {}, {};".format
         strings.append(element_template(name, elegant_type, attrs))
-        
-        # # Handle if an element has no attributes (e.g. a marker)
-        # if len(attrs) > 0:
-        #     element_template = "{}: {}, {};".format
-        #     strings.append(element_template(name, elegant_type, attrs))
-        # else:
-        #     element_template = "{}: {};".format
-        #     strings.append(element_template(name, elegant_type)) 
-               
+                       
     # Handle if input is a sequence file
     commands = latticejson["commands"]
     if "sequence" in list(zip(*commands))[0]:
@@ -254,25 +246,33 @@ def to_pyat(latticejson: dict) -> str:
 
     """
     
+    # Add imports
+    strings = [f"import at\n"]
+    
+    # Add name for function. If no title exists the default name is "lattice".
     function_name = latticejson.get('title')
     if function_name == "":
         function_name = "lattice"
-    strings = [f"def {function_name}():\n"]
+    strings.append(f"def {function_name}():\n")
     
+    # Add elements
     elements = latticejson["elements"]
-
-    element_template = "    {} = {}('{}', {})".format
+    element_template = "    {} = at.{}('{}', {})".format
       # TODO: check if equivalent type exists in pyat
     for name, (type_, attributes) in elements.items():
         attrs = ", ".join(f"{TO_PYAT[k]}={v}" for k, v in attributes.items())
         pyat_type = TO_PYAT[type_]
+        
+        # Check so required arguments are included 
+        
         strings.append(element_template(name, pyat_type, name, attrs))
         
     lattices = latticejson["lattices"]
+    lattice_template = "    {} = at.Lattice([{}])".format
+    for name, children in sort_lattices(latticejson).items():
+        strings.append(lattice_template(name, ", ".join(children)))
+        
+    strings.append(f"    return {latticejson['root']}\n")
 
-    # lattice_template = "{}: line=({})".format
-    # for name, children in sort_lattices(latticejson).items():
-    #     strings.append(lattice_template(name, ", ".join(children)))
-
-    strings.append(f"USE, {latticejson['root']}\n")
+#    strings.append(f"USE, {latticejson['root']}\n")
     return "\n".join(strings)
