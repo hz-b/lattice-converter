@@ -123,7 +123,7 @@ def _map_names(lattice_data: dict, name_map: dict) -> dict:
                     
     # Handle mapping of correctors to not have separate elements for hor/ver
     map_to_corrector(elements)
-
+    
     lattices = lattice_data["lattices"]    
     root = lattice_data.get("root", tuple(lattices.keys())[-1])
     title = lattice_data.get("title", "")
@@ -251,7 +251,7 @@ def to_pyat(latticejson: dict) -> str:
         string with in pyat lattice file format.
 
     """
-    
+        
     # Add imports
     strings = [f"import at\n"]
     
@@ -263,14 +263,21 @@ def to_pyat(latticejson: dict) -> str:
     
     # Add elements
     elements = latticejson["elements"]
+        
+    # Modify so corrector kick angle is array and remove kick_plane attribute since
+    # pyAT does not have separation between hor/ver correctors
+    for elem, (elem_type,attrs) in elements.items():
+        if elem_type == "Steerer":
+            attrs.pop("kick_plane")
+            hkick = attrs.pop("hkick")
+            vkick = attrs.pop("vkick")
+            attrs.update({"kick": [hkick,vkick]})
+         
     element_template = "    {} = at.{}('{}', {})".format
       # TODO: check if equivalent type exists in pyat
     for name, (type_, attributes) in elements.items():
         attrs = ", ".join(f"{TO_PYAT[k]}={v}" for k, v in attributes.items())
         pyat_type = TO_PYAT[type_]
-        
-        # Check so required arguments are included 
-        
         strings.append(element_template(name, pyat_type, name, attrs))
         
     lattices = latticejson["lattices"]

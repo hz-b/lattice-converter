@@ -22,7 +22,7 @@
         ["k2", ["k2"], ["k2"], ["h"]],
         ["k3", ["k3"], ["k3"], ["test"]],
         ["knl", ["knl"], ["knl"], ["test"]],
-        ["kick", ["kick"], ["kick"], ["KickAngle"]],
+        ["kick", ["kick"], ["kick"], ["kick_angle"]],
         ["tilt", ["tilt"], ["tilt"], ["test"]],
         ["voltage", ["volt"], ["volt"], ["voltage"]],
         ["frequency", ["freq"], ["freq"], ["frequency"]],
